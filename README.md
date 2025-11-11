@@ -55,13 +55,20 @@ track_genre: Musical genre classification of the track.
 
 
 ## Project Plan
-* Data inspection & cleaning: preparing categorical and numerical features for analysis.
-* Univariate analysis: target variable (Attrition_Flag) distribution.
-* Bivariate analysis: exploring relationships between features and churn (Attrition_Flag).
-* Correlation analysis: comparing numerical relationships across existing and attrited customers.
-* Group comparisons: using difference heatmaps to highlight how patterns shift with churn.
-* Visualization: interactive and static plots to present insights clearly.
-
+* Data Acquisition & Preparation
+  * Load and explore the Spotify tracks dataset from Kaggle.
+  * Clean and preprocess data: handle missing values, convert duration to minutes, normalize/scale relevant features.
+* Exploratory Data Analysis (EDA)
+  * Analyze distribution of popularity, tempo, valence, energy, and other audio features.
+  * Visualize relationships between key features using:
+      * Correlation heatmaps
+      * Pairplots and histograms
+* Interactive Dashboards & Gradio Interface
+  * Create an interactive Gradio interface that allows users to:
+  * Upload new track features and get popularity predictions
+  *  Explore how changes in tempo, energy, and valence affect classification
+  * Visualize real-time audio feature comparisons across genres or user inputs
+    
 ## The rationale to map the business requirements to the Data Visualisations
 
 
