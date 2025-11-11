@@ -1,33 +1,39 @@
-# Spotify-Track-Analytics-Popularity-Prediction
-
-The Credit Card Customer Churn Analysis project examines the factors that influence customer churn in the credit card industry. Using Explanatory Data Analysis (EDA) and visualization, we will try to identify patterns that distinguish loyal customers from probable churners. 
+# Spotify Track Analytics Popularity Prediction
 
 # ![CI logo](https://codeinstitute.s3.amazonaws.com/fullstack/ci_logo_small.png)
-
+<p align="center">
+  <img src="ChatGPT Image Nov 11, 2025, 11_08_22 AM.png" alt="Project Logo" width="25%">
+</p>
 ## Content
-* [Readme.md](https://github.com/YShutko/CodeInstitute_Project1_BankChurners/blob/main/README.md)
-* [Kanban Project Board](https://github.com/users/YShutko/projects/3)
+* [Readme.md](https://github.com/YShutko/spotify_track_analytics_popularity_prediction/blob/1eb084f166f61e2ec0c6dcf23cdb3fea6f7f3cb8/README.md)
+* [Kanban Project Board](https://github.com/users/YShutko/projects/6)
 * [Datasets](https://github.com/YShutko/CodeInstitute_Project1_BankChurners/tree/main/Data) original and cleaned
-* [Jupyter notebook](https://github.com/YShutko/CodeInstitute_Project1_BankChurners/blob/main/jupyter_notebooks/HackatonProject1.ipynb)
-* [Plotly plots](https://github.com/YShutko/CodeInstitute_Project1_BankChurners/tree/main/Plots) (Plotly plots could not be depicted on Github Jupyter Notebook)
+* [Jupyter notebook]()
 
 ## Dataset Content
-The data set used for this project: project: [Kaggle](https://www.kaggle.com/datasets/sakshigoyal7/credit-card-customers). The BankChurners dataset contains records of credit card customers, including demographic information (age, gender, marital status, education, income), account details (card type, credit limit, tenure), and transaction behavior (transaction amounts and counts). The dataset also includes a target variable "Attrition_Flag", which indicates whether a customer is an existing customer or an attrited customer.
-BankChurners.csv dataset consists of following columns:
-* CLIENTNUM: Client number. Unique identifier for the customer holding the account.
-* Attrition_Flag: Internal event (customer activity) variable - "Existing Customer" or "Attrited Customer".
-* Customer_Age: Demographic variable - Customer's Age in Years
-* Gender: Demographic variable - M=Male, F=Female.
-* Dependent_count: Demographic variable - Number of dependents.
-* Education_Level: Demographic variable - Educational Qualification of the account holder (example: high school, college graduate, etc.).
-* Marital_Status: Demographic variable - Married, Single, Divorced, Unknown.
-* Income_Category: Demographic variable - Annual Income Category of the account holder (< $40K, $40K - 60K, $60K - $80K, $80K-$120K >).
-* Card_Category: Product Variable - Type of Card (Blue, Silver, Gold, Platinum).
-* Months_on_book: Period of relationship with bank.
-* Mobths_Inactive_12_mon: Inactive period.
-* Total_Relationship_Count: This is the number of products/accounts a customer has with the bank.
-* Contacts_Count_12_mon: This is the number of contacts (interactions) the customer had with the bank in the last 12 months.
-* and etc.
+The data set used for this project: [Kaggle](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset). TA collection of ~114,000 songs across 125 genres with features like danceability, energy, tempo, and popularity. Ideal for audio analysis, genre classification, and music trend exploration.
+
+The dataset consists of the following columns:
+* track_id: Unique Spotify identifier for each track.
+* artists: List of artists performing the track, separated by semicolons.
+* album_name: Title of the album where the track appears.
+* track_name: Title of the song.
+* popularity: Score from 0–100 based on recent play counts; higher means more popular.
+* duration_ms: Length of the track in milliseconds.
+* explicit: Indicates whether the track contains explicit content (True/False).
+* danceability: Score (0.0–1.0) measuring how suitable the song is for dancing.
+* energy: Score (0.0–1.0) reflecting intensity, speed, and loudness.
+* key: Musical key using Pitch Class notation (0 = C, 1 = C♯/D♭, etc.).
+* loudness: Overall volume of the track in decibels.
+* mode: Indicates scale type (1 = major, 0 = minor).
+* speechiness: Score estimating spoken content in the track.
+* cousticness: Likelihood (0.0–1.0) that the song is acoustic.
+* instrumentalness: Probability that the track has no vocals.
+* liveness: Measures if the song was recorded live (higher = more live).
+* valence: Positivity of the music (0.0 = sad, 1.0 = happy).
+* tempo: Speed of the song in beats per minute (BPM).
+time_signature: Musical meter (e.g. 4 = 4/4 time).
+track_genre: Musical genre classification of the track.
 
 ## Business Requirements
 The business needs to understand the drivers of credit card customer attrition to reduce churn and improve customer retention. Specifically, management requires clear visual insights that show how churn varies across customer segments (demographics, income, card type) and behavioral features (inactive months, dependents, tenure, transactions, credit limits).
