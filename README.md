@@ -1,9 +1,12 @@
 # Spotify Track Analytics Popularity Prediction
 
 # ![CI logo](https://codeinstitute.s3.amazonaws.com/fullstack/ci_logo_small.png)
+
 <p align="center">
   <img src="ChatGPT Image Nov 11, 2025, 11_08_22 AM.png" alt="Project Logo" width="25%">
 </p>
+
+
 ## Content
 * [Readme.md](https://github.com/YShutko/spotify_track_analytics_popularity_prediction/blob/1eb084f166f61e2ec0c6dcf23cdb3fea6f7f3cb8/README.md)
 * [Kanban Project Board](https://github.com/users/YShutko/projects/6)
