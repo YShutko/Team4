@@ -1,4 +1,4 @@
-# Credit Card Customer Churn Analysis
+# Spotify-Track-Analytics-Popularity-Prediction
 
 The Credit Card Customer Churn Analysis project examines the factors that influence customer churn in the credit card industry. Using Explanatory Data Analysis (EDA) and visualization, we will try to identify patterns that distinguish loyal customers from probable churners. 
 
