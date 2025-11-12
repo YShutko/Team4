@@ -318,6 +318,21 @@ def predict_popularity(danceability, energy, key, loudness, mode, speechiness,
                       duration_ms, time_signature, genre):
     """Predict track popularity and provide recommendations"""
 
+    # Convert all inputs to proper types (Gradio may pass strings from Radio)
+    danceability = float(danceability)
+    energy = float(energy)
+    key = int(float(key))
+    loudness = float(loudness)
+    mode = int(float(mode))
+    speechiness = float(speechiness)
+    acousticness = float(acousticness)
+    instrumentalness = float(instrumentalness)
+    liveness = float(liveness)
+    valence = float(valence)
+    tempo = float(tempo)
+    duration_ms = float(duration_ms)
+    time_signature = int(float(time_signature))
+
     # Create feature dictionary matching training features
     # Calculate derived features
     duration_min = duration_ms / 60000
