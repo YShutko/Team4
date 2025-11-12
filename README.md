@@ -15,13 +15,13 @@
 * [Jupyter Notebooks](notebooks/) - ETL, Feature Engineering, ML Model
 * [ML Pipeline Summary](docs/ML_PIPELINE_SUMMARY.md) - Complete pipeline documentation
 
-## 🚀 Quick Start
+## Quick Start
 
-### 🌐 Try the Live Demo
+### Try the Live Demo
 
 **No installation required!** Try the interactive dashboard now:
 
-**[🎵 Launch Spotify Track Analytics on Hugging Face Spaces](https://huggingface.co/spaces/jmbarlow/spotify-track-analytics)**
+**[ Launch Spotify Track Analytics on Hugging Face Spaces](https://huggingface.co/spaces/jmbarlow/spotify-track-analytics)**
 
 ### Run Locally
 
@@ -46,10 +46,10 @@ python app_gradio.py
 Opens at http://localhost:7860
 
 All dashboards provide:
-- 📊 **Data Explorer**: Browse and filter 114,000 tracks
-- 📈 **Rich Visualizations**: Interactive charts and insights
-- 🤖 **ML Model Analysis**: Feature importance and performance
-- 🎯 **Track Predictor**: Predict popularity + get AI recommendations
+- **Data Explorer**: Browse and filter 114,000 tracks
+- **Rich Visualizations**: Interactive charts and insights
+- **ML Model Analysis**: Feature importance and performance
+- **Track Predictor**: Predict popularity + get AI recommendations
 
 ### Run the ML Pipeline
 ```bash
@@ -195,7 +195,7 @@ Tab 3: ML Model
 * **Residual Analysis**: Error distribution
 * **Complete Model Metadata**: JSON export of specifications
 
-Tab 4: Track Predictor 🎯
+Tab 4: Track Predictor 
 For Music Producers: Interactive tool to predict and optimize track popularity
 **Input Methods**:
   * Sliders (beginner-friendly with tooltips)
@@ -241,16 +241,16 @@ This project utilizes publicly available Spotify track data for the purpose of e
 
 ## Interactive Dashboard Features
 
-### 🎵 Streamlit Web Application
+### Streamlit Web Application
 Launch with: `streamlit run app.py`
 
-#### Tab 1: Data Explorer 📊
+#### Tab 1: Data Explorer 
 - Browse 114,000 Spotify tracks
 - Filter by genre and popularity range
 - View track details (name, artists, audio features)
 - Download filtered data as CSV
 
-#### Tab 2: Visualizations 📈
+#### Tab 2: Visualizations 
 - **Popularity Distribution**: Histogram of track popularity scores
 - **Audio Features**: 6 feature distributions (danceability, energy, valence, etc.)
 - **Top 20 Genres**: Bar chart of most popular genres
@@ -258,20 +258,20 @@ Launch with: `streamlit run app.py`
 - **Correlation Heatmap**: Feature relationships
 - **Interactive Scatter**: Custom X/Y axis selection with color coding
 
-#### Tab 3: ML Model 🤖
+#### Tab 3: ML Model 
 - **Model Performance Metrics**: R² = 0.39, RMSE = 17.4
 - **Top 20 Feature Importances**: Genre, track length, explicit content
 - **Prediction vs Actual**: Scatter plot visualization
 - **Residual Analysis**: Error distribution
 - **Complete Model Metadata**: JSON export of specifications
 
-#### Tab 4: Track Predictor 🎯
+#### Tab 4: Track Predictor 
 **For Music Producers**: Interactive tool to predict and optimize track popularity
 
 **Input Methods**:
-- 🎚️ Sliders (beginner-friendly with tooltips)
-- 📝 Manual entry (advanced users)
-- 🎲 Random example (explore real tracks)
+- Sliders (beginner-friendly with tooltips)
+- Manual entry (advanced users)
+- Random example (explore real tracks)
 
 **Features**:
 - Set 14 audio characteristics (danceability, energy, tempo, etc.)
@@ -303,4 +303,4 @@ See [Streamlit App Guide](docs/streamlit_app_guide.md) for detailed usage instru
 * [gradio](https://www.gradio.app/)
 
 # Acknowledgements
-Thanks to our facilitator Emma Lamont and  tutors for their help and support. 
+Thanks to our facilitator, Emma Lamont, and our  tutors for their help and support. 
