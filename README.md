@@ -373,7 +373,7 @@ This project utilizes publicly available Spotify track data for the purpose of e
 ## Development Roadmap
 
 ## Planning:
-* GitHub [Project Board](https://github.com/users/YShutko/projects/6)was used to plan and track the progress.
+* GitHub [Project Board](https://github.com/users/YShutko/projects/6) was used to plan and track the progress.
 
 ## Main Data Analysis & ML Libraries
 * **Data Processing**: Pandas, Numpy
