@@ -31,6 +31,12 @@ dashboard: ## Launch Streamlit dashboard
 	@echo "Press Ctrl+C to stop"
 	$(STREAMLIT) run app.py
 
+dashboard-gradio: ## Launch Gradio dashboard
+	@echo "🚀 Launching Gradio dashboard..."
+	@echo "Dashboard will open at http://localhost:7860"
+	@echo "Press Ctrl+C to stop"
+	$(PYTHON) app_gradio.py
+
 pipeline: ## Run complete ETL -> FE -> ML pipeline
 	@echo "🔄 Running complete pipeline..."
 	$(PYTHON) run_pipeline.py

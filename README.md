@@ -18,15 +18,28 @@
 ## 🚀 Quick Start
 
 ### Run the Interactive Dashboard
-```bash
-# Activate virtual environment
-source .venv/bin/activate
 
-# Launch Streamlit app
+**Option 1: Streamlit (recommended)**
+```bash
+# Using make command
+make dashboard
+
+# Or directly
 streamlit run app.py
 ```
+Opens at http://localhost:8501
 
-The dashboard provides:
+**Option 2: Gradio**
+```bash
+# Using make command
+make dashboard-gradio
+
+# Or directly
+python app_gradio.py
+```
+Opens at http://localhost:7860
+
+Both dashboards provide:
 - 📊 **Data Explorer**: Browse and filter 114,000 tracks
 - 📈 **Rich Visualizations**: Interactive charts and insights
 - 🤖 **ML Model Analysis**: Feature importance and performance

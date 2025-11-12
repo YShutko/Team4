@@ -13,6 +13,12 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
   - ML Model tab
   - Track Predictor tool (music producer guide)
 
+- **[Gradio App Guide](gradio_app_guide.md)** - Alternative Gradio dashboard guide
+  - Same features as Streamlit
+  - Simpler interface
+  - Easy sharing and deployment
+  - Mobile-friendly design
+
 ### For Developers
 - **[Makefile Guide](MAKEFILE_GUIDE.md)** - Command reference for all 27 make targets
   - Installation & setup
@@ -84,7 +90,7 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
 ### I want to...
 
 **...use the dashboard**
-→ Read [Streamlit App Guide](streamlit_app_guide.md)
+→ Read [Streamlit App Guide](streamlit_app_guide.md) or [Gradio App Guide](gradio_app_guide.md)
 
 **...run the ML pipeline**
 → Read [Makefile Guide](MAKEFILE_GUIDE.md#pipeline-execution)
@@ -182,10 +188,10 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
 
 | Metric | Count |
 |--------|-------|
-| **Total Documents** | 11 |
-| **Total Pages** | 150+ |
-| **Total Words** | 30,000+ |
-| **Code Examples** | 100+ |
+| **Total Documents** | 12 |
+| **Total Pages** | 160+ |
+| **Total Words** | 32,000+ |
+| **Code Examples** | 105+ |
 | **Diagrams** | 10+ |
 | **Screenshots** | 0 (text-based) |
 
@@ -195,7 +201,8 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
 
 ### Music Producer / Artist
 1. [Streamlit App Guide](streamlit_app_guide.md) - Track Predictor section
-2. [Dashboard Implementation](DASHBOARD_IMPLEMENTATION.md#track-predictor) - How it works
+2. [Gradio App Guide](gradio_app_guide.md) - Alternative interface
+3. [Dashboard Implementation](DASHBOARD_IMPLEMENTATION.md#track-predictor) - How it works
 
 ### Data Analyst
 1. [Streamlit App Guide](streamlit_app_guide.md) - Visualizations tab
