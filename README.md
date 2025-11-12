@@ -375,54 +375,6 @@ This project utilizes publicly available Spotify track data for the purpose of e
 ## Planning:
 * GitHub [Project Board]([https://github.com/users/YShutko/projects/3](https://github.com/users/YShutko/projects/6)) was used to plan and track the progress.
 
-## Interactive Dashboard Features
-
-### Streamlit Web Application
-Launch with: `streamlit run app.py`
-
-#### Tab 1: Data Explorer 
-- Browse 114,000 Spotify tracks
-- Filter by genre and popularity range
-- View track details (name, artists, audio features)
-- Download filtered data as CSV
-
-#### Tab 2: Visualizations 
-- **Popularity Distribution**: Histogram of track popularity scores
-- **Audio Features**: 6 feature distributions (danceability, energy, valence, etc.)
-- **Top 20 Genres**: Bar chart of most popular genres
-- **Mood & Energy**: Pie charts showing track classification
-- **Correlation Heatmap**: Feature relationships
-- **Interactive Scatter**: Custom X/Y axis selection with color coding
-
-#### Tab 3: ML Model 
-- **Model Performance Metrics**: R² = 0.39, RMSE = 17.4
-- **Top 20 Feature Importances**: Genre, track length, explicit content
-- **Prediction vs Actual**: Scatter plot visualization
-- **Residual Analysis**: Error distribution
-- **Complete Model Metadata**: JSON export of specifications
-
-#### Tab 4: Track Predictor 
-**For Music Producers**: Interactive tool to predict and optimize track popularity
-
-**Input Methods**:
-- Sliders (beginner-friendly with tooltips)
-- Manual entry (advanced users)
-- Random example (explore real tracks)
-
-**Features**:
-- Set 14 audio characteristics (danceability, energy, tempo, etc.)
-- Get instant popularity prediction (0-100 score)
-- Receive up to 5 AI-powered recommendations
-- See potential impact (+5 to +12 popularity points)
-- Compare with successful tracks in same genre
-
-**Example Recommendations**:
-- "Increase danceability from 0.5 to 0.7 for +10 points"
-- "Boost energy with louder instruments for +8 points"
-- "Try major key for more uplifting feel (+6 points)"
-
-See [Streamlit App Guide](docs/streamlit_app_guide.md) for detailed usage instructions.
-
 ## Main Data Analysis & ML Libraries
 * **Data Processing**: Pandas, Numpy
 * **Visualization**: Plotly, Seaborn, Matplotlib
