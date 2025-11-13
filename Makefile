@@ -1,168 +1,159 @@
-.PHONY: help install dashboard pipeline etl fe train test lint format clean all
+.PHONY: help setup clean test mlflow-ui mlflow-clean train notebook lint format
 
 # Default target
 .DEFAULT_GOAL := help
 
-# Variables
-PYTHON := python
-PIP := pip
-STREAMLIT := streamlit
-VENV := .venv
-SRC_DIR := src
-NOTEBOOKS_DIR := notebooks
-DATA_DIR := data
+##@ General
 
-help: ## Show this help message
-	@echo "Spotify Track Analytics - Available Commands"
-	@echo "=============================================="
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+help: ## Display this help message
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
-install: ## Install production dependencies
-	@echo "📦 Installing production dependencies..."
-	$(PIP) install -r requirements.txt
-	@echo "✅ Installation complete!"
+setup: ## Install dependencies and setup environment
+	@echo "📦 Installing dependencies..."
+	@pip install -r requirements.txt
+	@echo "✅ Setup complete!"
 
-install-dev: ## Install all dependencies (production + development)
-	@echo "📦 Installing all dependencies..."
-	$(PIP) install -r requirements.txt
-	$(PIP) install -r requirements-dev.txt
-	$(PYTHON) -m ipykernel install --user --name spotify_env
-	nbdime config-git --enable --global
-	@echo "✅ Installation complete!"
-
-dashboard: ## Launch Streamlit dashboard
-	@echo "🚀 Launching Streamlit dashboard..."
-	@echo "Dashboard will open at http://localhost:8501"
-	@echo "Press Ctrl+C to stop"
-	$(STREAMLIT) run app.py
-
-dashboard-gradio: ## Launch Gradio dashboard
-	@echo "🚀 Launching Gradio dashboard..."
-	@echo "Dashboard will open at http://localhost:7860"
-	@echo "Press Ctrl+C to stop"
-	$(PYTHON) app_gradio.py
-
-pipeline: ## Run complete ETL -> FE -> ML pipeline
-	@echo "🔄 Running complete pipeline..."
-	$(PYTHON) run_pipeline.py
-
-etl: ## Run ETL pipeline only
-	@echo "📊 Running ETL pipeline..."
-	$(PYTHON) $(SRC_DIR)/etl_pipeline.py
-
-fe: ## Run Feature Engineering only
-	@echo "🔧 Running Feature Engineering..."
-	$(PYTHON) $(SRC_DIR)/feature_engineering.py
-
-train: ## Train ML model only
-	@echo "🤖 Training ML model..."
-	$(PYTHON) $(SRC_DIR)/train_model.py
-
-test: ## Run pipeline verification tests
-	@echo "🧪 Running tests..."
-	$(PYTHON) $(SRC_DIR)/test_pipeline.py
-
-lint: ## Run linting checks (flake8)
-	@echo "🔍 Running flake8 linting..."
-	flake8 $(SRC_DIR) app.py run_pipeline.py --max-line-length=120 --extend-ignore=E203,W503
-
-lint-strict: ## Run strict linting (pylint)
-	@echo "🔍 Running pylint (strict)..."
-	pylint $(SRC_DIR)/*.py app.py run_pipeline.py --max-line-length=120
-
-format: ## Format code with black
-	@echo "✨ Formatting code with black..."
-	black $(SRC_DIR) app.py run_pipeline.py --line-length=120
-	@echo "✅ Code formatted!"
-
-format-check: ## Check if code is formatted
-	@echo "🔍 Checking code formatting..."
-	black $(SRC_DIR) app.py run_pipeline.py --check --line-length=120
-
-nbconvert: ## Convert notebooks to Python scripts
-	@echo "📓 Converting notebooks to scripts..."
-	jupyter nbconvert --to script $(NOTEBOOKS_DIR)/*.ipynb
-	@echo "✅ Notebooks converted!"
-
-nbdiff: ## Show notebook diffs with nbdime
-	@echo "📊 Opening nbdime diff tool..."
-	nbdiff-web
-
-clean: ## Clean generated files
-	@echo "🧹 Cleaning generated files..."
-	rm -rf __pycache__ $(SRC_DIR)/__pycache__
-	rm -rf .pytest_cache
-	rm -rf *.pyc $(SRC_DIR)/*.pyc
-	rm -rf $(NOTEBOOKS_DIR)/*_output.ipynb
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete
+clean: ## Clean generated files and caches
+	@echo "🧹 Cleaning up..."
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name ".ipynb_checkpoints" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete
+	@find . -type f -name "*.pyo" -delete
+	@find . -type f -name ".DS_Store" -delete
 	@echo "✅ Cleanup complete!"
 
-clean-data: ## Remove processed data (keeps raw data)
-	@echo "⚠️  Warning: This will delete processed data files"
+##@ MLflow
+
+mlflow-ui: ## Start MLflow UI with SQLite backend
+	@echo "🚀 Starting MLflow UI..."
+	@echo "   Backend: SQLite (mlruns/mlflow.db)"
+	@echo "   URL: http://127.0.0.1:5000"
+	@echo ""
+	@mlflow ui --backend-store-uri sqlite:///mlruns/mlflow.db --port 5000
+
+mlflow-clean: ## Clean all MLflow runs and artifacts
+	@echo "⚠️  This will delete all MLflow experiments, runs, and artifacts!"
 	@read -p "Are you sure? [y/N] " -n 1 -r; \
 	echo; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		rm -rf $(DATA_DIR)/processed/*; \
-		echo "✅ Processed data removed"; \
+		rm -rf mlruns mlartifacts; \
+		echo "✅ MLflow data deleted!"; \
 	else \
 		echo "❌ Cancelled"; \
 	fi
 
-clean-models: ## Remove trained models
-	@echo "⚠️  Warning: This will delete trained models"
-	@read -p "Are you sure? [y/N] " -n 1 -r; \
-	echo; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		rm -rf outputs/models/*; \
-		echo "✅ Models removed"; \
-	else \
-		echo "❌ Cancelled"; \
-	fi
+mlflow-export: ## Export MLflow experiments to CSV
+	@echo "📊 Exporting MLflow experiments..."
+	@mkdir -p exports
+	@python -c "import mlflow; import pandas as pd; \
+		mlflow.set_tracking_uri('sqlite:///mlruns/mlflow.db'); \
+		runs = mlflow.search_runs(); \
+		runs.to_csv('exports/mlflow_runs.csv', index=False); \
+		print(f'✅ Exported {len(runs)} runs to exports/mlflow_runs.csv')"
 
-requirements: ## Generate/update requirements.txt
-	@echo "📋 Updating requirements.txt..."
-	$(PIP) freeze > requirements_frozen.txt
-	@echo "✅ Requirements saved to requirements_frozen.txt"
-
-dev: ## Install development dependencies only
-	@echo "🛠️  Installing development tools..."
-	$(PIP) install -r requirements-dev.txt
-	@echo "✅ Dev tools installed!"
-
-status: ## Show pipeline status
-	@echo "📊 Pipeline Status"
-	@echo "=================="
+mlflow-info: ## Show MLflow tracking information
+	@echo "📊 MLflow Information:"
+	@echo "   Tracking URI: sqlite:///mlruns/mlflow.db"
+	@echo "   Artifacts: ./mlartifacts"
 	@echo ""
-	@echo "Data Files:"
-	@ls -lh $(DATA_DIR)/raw/dataset.csv 2>/dev/null && echo "  ✅ Raw data present" || echo "  ❌ Raw data missing"
-	@ls -lh $(DATA_DIR)/processed/cleaned_spotify_data.parquet 2>/dev/null && echo "  ✅ Cleaned data present" || echo "  ❌ Cleaned data missing"
-	@ls -lh $(DATA_DIR)/processed/X_train.parquet 2>/dev/null && echo "  ✅ Training data present" || echo "  ❌ Training data missing"
+	@python -c "import mlflow; \
+		mlflow.set_tracking_uri('sqlite:///mlruns/mlflow.db'); \
+		experiments = mlflow.search_experiments(); \
+		print(f'   Total Experiments: {len(experiments)}'); \
+		for exp in experiments: \
+			runs = mlflow.search_runs([exp.experiment_id]); \
+			print(f'   - {exp.name}: {len(runs)} runs');" 2>/dev/null || echo "   No experiments found"
+
+##@ Training
+
+train: ## Run improved ML pipeline
+	@echo "🤖 Training model with improved pipeline..."
+	@python src/improved_ml_pipeline.py
+
+train-mlflow: ## Run improved ML pipeline with MLflow tracking
+	@echo "🤖 Training model with MLflow tracking..."
+	@python src/improved_ml_pipeline_mlflow.py
+
+test-pipeline: ## Test pipeline with synthetic data
+	@echo "🧪 Testing pipeline with synthetic data..."
+	@python src/test_pipeline.py
+	@python src/improved_ml_pipeline.py
+	@echo "✅ Pipeline test complete!"
+
+##@ Notebooks
+
+notebook: ## Start Jupyter notebook server
+	@echo "📓 Starting Jupyter notebook..."
+	@jupyter notebook
+
+notebook-improved: ## Open improved ML pipeline notebook
+	@echo "📓 Opening improved ML pipeline notebook..."
+	@jupyter notebook notebooks/04_Improved_ML_Pipeline.ipynb
+
+##@ Development
+
+lint: ## Run code quality checks
+	@echo "🔍 Running linting checks..."
+	@python -m flake8 src/ --max-line-length=100 --ignore=E203,W503 || echo "⚠️  Install flake8: pip install flake8"
+
+format: ## Format code with black
+	@echo "✨ Formatting code..."
+	@python -m black src/ --line-length=100 || echo "⚠️  Install black: pip install black"
+
+##@ Git
+
+git-status: ## Show git status with useful information
+	@echo "📊 Git Status:"
+	@git status -sb
 	@echo ""
-	@echo "Models:"
-	@ls -lh outputs/models/xgboost_popularity_model.joblib 2>/dev/null && echo "  ✅ Model trained" || echo "  ❌ Model not trained"
+	@echo "Recent commits:"
+	@git log --oneline -5
+
+git-push: ## Push commits to remote
+	@echo "🚀 Pushing to remote..."
+	@git push origin main
+
+##@ Outputs
+
+view-plots: ## Open outputs directory to view plots
+	@echo "📊 Opening outputs/plots directory..."
+	@open outputs/plots/ 2>/dev/null || xdg-open outputs/plots/ 2>/dev/null || echo "Plots location: outputs/plots/"
+
+view-models: ## Show saved models
+	@echo "💾 Saved Models:"
+	@ls -lh outputs/models/*.joblib 2>/dev/null || echo "No models found"
+
+view-metadata: ## Show model metadata
+	@echo "📋 Model Metadata:"
+	@ls -lh outputs/metadata/*.json 2>/dev/null || echo "No metadata found"
 	@echo ""
-	@echo "App:"
-	@ls -lh app.py 2>/dev/null && echo "  ✅ Dashboard ready" || echo "  ❌ Dashboard missing"
+	@echo "Latest metadata:"
+	@ls -t outputs/metadata/*.json 2>/dev/null | head -1 | xargs cat 2>/dev/null || echo "No metadata found"
 
-all: clean pipeline test ## Run full workflow: clean -> pipeline -> test
-	@echo "✅ Full workflow complete!"
+##@ Documentation
 
-quick-start: install pipeline dashboard ## Quick start: install -> pipeline -> dashboard
-	@echo "🎉 Quick start complete!"
+docs: ## Show project documentation
+	@echo "📚 Project Documentation:"
+	@echo "   - Full Spec: dev_docs/ML_PIPELINE_IMPROVEMENTS_SPEC.md"
+	@echo "   - Implementation Summary: IMPLEMENTATION_SUMMARY.md"
+	@echo "   - Quick Start: README_IMPROVEMENTS.md"
+	@echo "   - Source Code: src/README.md"
 
-# Notebook execution targets
-nb-etl: ## Run ETL notebook with papermill
-	@echo "📓 Running ETL notebook..."
-	papermill $(NOTEBOOKS_DIR)/00_ETL_Pipeline.ipynb $(NOTEBOOKS_DIR)/00_ETL_Pipeline_output.ipynb
+view-spec: ## View ML pipeline improvements specification
+	@cat dev_docs/ML_PIPELINE_IMPROVEMENTS_SPEC.md | less
 
-nb-fe: ## Run Feature Engineering notebook with papermill
-	@echo "📓 Running Feature Engineering notebook..."
-	papermill $(NOTEBOOKS_DIR)/02_Feature_Engineering.ipynb $(NOTEBOOKS_DIR)/02_Feature_Engineering_output.ipynb
+##@ Docker (Optional)
 
-nb-ml: ## Run ML notebook with papermill
-	@echo "📓 Running ML training notebook..."
-	papermill $(NOTEBOOKS_DIR)/03_ML_XGBoost_Model.ipynb $(NOTEBOOKS_DIR)/03_ML_XGBoost_Model_output.ipynb
+docker-build: ## Build Docker image for the project
+	@echo "🐳 Building Docker image..."
+	@docker build -t spotify-ml-pipeline .
 
-nb-all: nb-etl nb-fe nb-ml ## Run all notebooks with papermill
-	@echo "✅ All notebooks executed!"
+docker-run: ## Run Docker container
+	@echo "🐳 Running Docker container..."
+	@docker run -p 5000:5000 -p 8888:8888 -v $(PWD):/app spotify-ml-pipeline
+
+##@ All-in-one
+
+full-pipeline: clean setup train mlflow-ui ## Run full pipeline from scratch
+	@echo "✅ Full pipeline complete!"
+
