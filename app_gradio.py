@@ -469,11 +469,22 @@ def predict_popularity(danceability, energy, key, loudness, mode, speechiness,
     genre_encoded = hash(genre) % 100 / 100.0
     feature_vector['track_genre_encoded'] = [genre_encoded]
 
-    # Ensure we have all features in correct order
-    feature_vector = feature_vector.reindex(columns=X_test.columns, fill_value=0)
+    # Filter to only include features the model expects
+    feature_vector_model = feature_vector[[col for col in model.feature_names_in_ if col in feature_vector.columns]].copy()
+
+    # Add missing features with appropriate default values
+    for col in model.feature_names_in_:
+        if col not in feature_vector_model.columns:
+            if col == 'release_year':
+                feature_vector_model[col] = [2020]  # Default year for missing release_year
+            else:
+                feature_vector_model[col] = [0]  # Default to 0 for other missing features
+
+    # Ensure column order matches model's expectations
+    feature_vector_model = feature_vector_model[model.feature_names_in_]
 
     # Make prediction
-    prediction = model.predict(feature_vector)[0]
+    prediction = model.predict(feature_vector_model)[0]
     prediction = max(0, min(100, prediction))  # Clip to 0-100 range
 
     # Generate recommendations

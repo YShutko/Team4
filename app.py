@@ -609,18 +609,23 @@ with tab4:
         # Create DataFrame with correct column order
         feature_df = pd.DataFrame([features])
 
-        # Ensure all model features are present (add missing as 0)
-        X_test_sample, _ = load_ml_data()
-        for col in X_test_sample.columns:
-            if col not in feature_df.columns:
-                feature_df[col] = 0
+        # Filter to only include features the model expects
+        feature_df_model = feature_df[[col for col in model.feature_names_in_ if col in feature_df.columns]].copy()
 
-        # Reorder to match training
-        feature_df = feature_df[X_test_sample.columns]
+        # Add missing features with appropriate default values
+        for col in model.feature_names_in_:
+            if col not in feature_df_model.columns:
+                if col == 'release_year':
+                    feature_df_model[col] = 2020  # Default year for missing release_year
+                else:
+                    feature_df_model[col] = 0  # Default to 0 for other missing features
+
+        # Ensure column order matches model's expectations
+        feature_df_model = feature_df_model[model.feature_names_in_]
 
         # Make prediction
         try:
-            prediction = model.predict(feature_df)[0]
+            prediction = model.predict(feature_df_model)[0]
             prediction = np.clip(prediction, 0, 100)  # Ensure 0-100 range
 
             # Display prediction
