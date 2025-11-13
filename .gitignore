@@ -62,7 +62,6 @@ env.py
 
 # Streamlit
 .streamlit/secrets.toml
-.streamlit/config.toml
 
 # Gradio
 gradio_cached_examples/
