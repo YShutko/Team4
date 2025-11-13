@@ -1,4 +1,4 @@
-.PHONY: help setup clean test mlflow-ui mlflow-clean train notebook lint format
+.PHONY: help setup clean test mlflow-ui mlflow-clean train notebook lint format streamlit gradio
 
 # Default target
 .DEFAULT_GOAL := help
@@ -90,15 +90,44 @@ notebook-improved: ## Open improved ML pipeline notebook
 	@echo "📓 Opening improved ML pipeline notebook..."
 	@jupyter notebook notebooks/04_Improved_ML_Pipeline.ipynb
 
+##@ Dashboards
+
+streamlit: ## Run Streamlit dashboard
+	@echo "🎨 Starting Streamlit dashboard..."
+	@echo "   URL: http://localhost:8501"
+	@streamlit run app.py
+
+gradio: ## Run Gradio dashboard
+	@echo "🎨 Starting Gradio dashboard..."
+	@echo "   URL: http://localhost:7860"
+	@python app_gradio.py
+
+hf-space: ## Run Hugging Face Space app locally
+	@echo "🤗 Starting Hugging Face Space app..."
+	@cd hf_space && streamlit run app.py
+
 ##@ Development
 
 lint: ## Run code quality checks
 	@echo "🔍 Running linting checks..."
 	@python -m flake8 src/ --max-line-length=100 --ignore=E203,W503 || echo "⚠️  Install flake8: pip install flake8"
 
+lint-all: ## Run comprehensive linting (flake8, pylint, mypy)
+	@echo "🔍 Running comprehensive linting..."
+	@echo "Running flake8..."
+	@python -m flake8 src/ app.py app_gradio.py --max-line-length=100 --ignore=E203,W503 || echo "⚠️  Install flake8: pip install flake8"
+	@echo "Running pylint..."
+	@python -m pylint src/ --max-line-length=100 --disable=C0103,C0114,C0115,C0116 || echo "⚠️  Install pylint: pip install pylint"
+	@echo "Running mypy..."
+	@python -m mypy src/ --ignore-missing-imports || echo "⚠️  Install mypy: pip install mypy"
+
 format: ## Format code with black
 	@echo "✨ Formatting code..."
 	@python -m black src/ --line-length=100 || echo "⚠️  Install black: pip install black"
+
+format-all: ## Format all Python files (src + apps)
+	@echo "✨ Formatting all Python files..."
+	@python -m black src/ app.py app_gradio.py --line-length=100 || echo "⚠️  Install black: pip install black"
 
 ##@ Git
 
@@ -154,6 +183,29 @@ docker-run: ## Run Docker container
 
 ##@ All-in-one
 
-full-pipeline: clean setup train mlflow-ui ## Run full pipeline from scratch
+full-pipeline: clean setup test-pipeline ## Run full pipeline with synthetic data
 	@echo "✅ Full pipeline complete!"
+	@echo ""
+	@echo "To view results:"
+	@echo "  - Plots: make view-plots"
+	@echo "  - MLflow UI: make mlflow-ui"
+
+full-pipeline-real: clean setup prepare-data train ## Run full pipeline with real data
+	@echo "✅ Full pipeline complete!"
+	@echo ""
+	@echo "To view results:"
+	@echo "  - Plots: make view-plots"
+	@echo "  - MLflow UI: make mlflow-ui"
+
+prepare-data: ## Prepare cleaned data from processed parquet files
+	@echo "📊 Preparing cleaned data from parquet files..."
+	@python -c "import pandas as pd; \
+		import os; \
+		if not os.path.exists('data/processed/ml_ready_data.parquet'): \
+			print('❌ Error: data/processed/ml_ready_data.parquet not found'); \
+			print('   Please run ETL pipeline first or use: make test-pipeline'); \
+			exit(1); \
+		df = pd.read_parquet('data/processed/ml_ready_data.parquet'); \
+		df.to_csv('cleaned_music_data.csv', index=False); \
+		print(f'✅ Created cleaned_music_data.csv with {len(df):,} rows')"
 
