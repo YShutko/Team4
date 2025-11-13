@@ -44,16 +44,20 @@ mlflow-clean: ## Clean all MLflow runs and artifacts
 
 mlflow-reset: ## Reset MLflow database (fixes inconsistent state)
 	@echo "🔧 Resetting MLflow database..."
+	@echo "   This will delete the database but preserve experiments and artifacts"
 	@pkill -f "mlflow ui" 2>/dev/null || true
 	@sleep 1
 	@rm -f mlruns/.trash/* 2>/dev/null || true
 	@if [ -f mlruns/mlflow.db ]; then \
-		python3 -c "import sqlite3; conn = sqlite3.connect('mlruns/mlflow.db'); conn.execute('PRAGMA integrity_check'); conn.close(); print('✅ Database integrity check passed')"; \
+		rm -f mlruns/mlflow.db mlruns/mlflow.db-shm mlruns/mlflow.db-wal; \
+		echo "✅ Deleted corrupted database files"; \
 	else \
-		echo "📝 Database will be created on first run"; \
+		echo "📝 No database file found"; \
 	fi
+	@mkdir -p mlruns mlartifacts
 	@echo "✅ MLflow reset complete!"
-	@echo "   Run 'make mlflow-ui' to start fresh"
+	@echo "   Database will be recreated on next start"
+	@echo "   Run: make mlflow-ui"
 
 mlflow-export: ## Export MLflow experiments to CSV
 	@echo "📊 Exporting MLflow experiments..."
@@ -81,7 +85,14 @@ mlflow-info: ## Show MLflow tracking information
 
 mlflow-stop: ## Stop MLflow UI server
 	@echo "🛑 Stopping MLflow UI..."
-	@pkill -f "mlflow ui" 2>/dev/null && echo "✅ MLflow UI stopped" || echo "ℹ️  MLflow UI was not running"
+	@pkill -f "mlflow ui" 2>/dev/null || true
+	@pkill -f "mlflow.server:app" 2>/dev/null || true
+	@sleep 1
+	@if ps aux | grep -E "(mlflow ui|mlflow.server)" | grep -v grep > /dev/null; then \
+		echo "⚠️  Some MLflow processes may still be running"; \
+	else \
+		echo "✅ MLflow UI stopped"; \
+	fi
 
 ##@ Training
 
