@@ -239,3 +239,17 @@ prepare-data: ## Prepare cleaned data from processed parquet files
 		df.to_csv('cleaned_music_data.csv', index=False); \
 		print(f'✅ Created cleaned_music_data.csv with {len(df):,} rows')"
 
+##@ Presentation
+
+screens: ## Capture screenshots for presentation
+	@echo "📸 Capturing screenshots..."
+	@python presentation/capture_screens.py
+
+slides: screens ## Generate PowerPoint presentation from screenshots
+	@echo "🎬 Building PowerPoint presentation..."
+	@python presentation/build_pptx.py
+
+view-slides: ## Open generated presentation
+	@echo "🎥 Opening presentation..."
+	@open presentation/output/Spotify_Popularity_Prediction_Presentation.pptx 2>/dev/null || xdg-open presentation/output/Spotify_Popularity_Prediction_Presentation.pptx 2>/dev/null || echo "Presentation location: presentation/output/Spotify_Popularity_Prediction_Presentation.pptx"
+

@@ -121,3 +121,7 @@ hf_space/
 mlruns/
 mlartifacts/
 exports/
+
+# Presentation artifacts (generated)
+presentation/screens/
+presentation/output/
