@@ -99,7 +99,9 @@ outputs/*
 outputs/models/*
 outputs/metadata/*
 !outputs/models/xgb_model_*.joblib
+!outputs/models/rf_model_*.joblib
 !outputs/metadata/xgb_metadata_*.json
+!outputs/metadata/rf_metadata_*.json
 !outputs/models/model_metadata.json
 !outputs/models/feature_importance.csv
 

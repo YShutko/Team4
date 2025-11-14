@@ -1,0 +1,83 @@
+{
+  "timestamp": "2025-11-14T16:18:42.490361",
+  "model_type": "RandomForestRegressor",
+  "sklearn_version": "1.7.2",
+  "n_samples": 78310,
+  "n_features": 9,
+  "feature_names": [
+    "danceability",
+    "energy",
+    "loudness",
+    "speechiness",
+    "acousticness",
+    "instrumentalness",
+    "liveness",
+    "valence",
+    "tempo"
+  ],
+  "hyperparameters": {
+    "n_estimators": 250,
+    "max_depth": 18,
+    "min_samples_split": 15,
+    "min_samples_leaf": 5,
+    "max_features": "sqrt",
+    "bootstrap": true
+  },
+  "metrics": {
+    "test_r2": 0.1546965216951316,
+    "test_rmse": 16.36615664178346,
+    "test_mae": 13.204124688017698
+  },
+  "data_shapes": {
+    "train": [
+      54817,
+      9
+    ],
+    "val": [
+      11746,
+      9
+    ],
+    "test": [
+      11747,
+      9
+    ]
+  },
+  "feature_importance": [
+    {
+      "feature": "danceability",
+      "importance": 0.10336628756901681
+    },
+    {
+      "feature": "energy",
+      "importance": 0.112305915368737
+    },
+    {
+      "feature": "loudness",
+      "importance": 0.11880846574294679
+    },
+    {
+      "feature": "speechiness",
+      "importance": 0.10479615386066718
+    },
+    {
+      "feature": "acousticness",
+      "importance": 0.13679315944161546
+    },
+    {
+      "feature": "instrumentalness",
+      "importance": 0.15243147733057244
+    },
+    {
+      "feature": "liveness",
+      "importance": 0.08008734783694736
+    },
+    {
+      "feature": "valence",
+      "importance": 0.10712013965769816
+    },
+    {
+      "feature": "tempo",
+      "importance": 0.08429105319179879
+    }
+  ]
+}
