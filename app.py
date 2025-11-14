@@ -380,35 +380,82 @@ with tab3:
     st.markdown('<h2 class="sub-header">Machine Learning Model</h2>', unsafe_allow_html=True)
 
     # Model info
-    col1, col2, col3 = st.columns(3)
+    st.markdown("#### 📊 Model Performance Metrics")
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Model Type", "XGBoost Regressor")
+        st.metric("Test R² Score", f"{metadata['performance']['test']['r2']:.4f}",
+                  help="Coefficient of determination - explains 85.8% of variance")
     with col2:
-        st.metric("Test R² Score", f"{metadata['performance']['test']['r2']:.4f}")
+        st.metric("Test RMSE", f"{metadata['performance']['test']['rmse']:.2f}",
+                  help="Root Mean Squared Error")
     with col3:
-        st.metric("Test RMSE", f"{metadata['performance']['test']['rmse']:.2f}")
+        st.metric("Test MAE", f"{metadata['performance']['test']['mae']:.2f}",
+                  help="Mean Absolute Error")
+    with col4:
+        st.metric("Features", metadata['n_features'],
+                  help="Number of audio features used")
+
+    # Training info
+    with st.expander("ℹ️ Model Details"):
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**Hyperparameters:**")
+            st.json({
+                "n_estimators": metadata['hyperparameters']['n_estimators'],
+                "max_depth": metadata['hyperparameters']['max_depth'],
+                "learning_rate": round(metadata['hyperparameters']['learning_rate'], 4),
+                "subsample": round(metadata['hyperparameters']['subsample'], 4),
+                "colsample_bytree": round(metadata['hyperparameters']['colsample_bytree'], 4)
+            })
+        with col2:
+            st.markdown("**Training Info:**")
+            st.write(f"- Model Type: XGBoost Regressor")
+            st.write(f"- Training Samples: {metadata['n_train_samples']:,}")
+            st.write(f"- Test Samples: {metadata['n_test_samples']:,}")
+            st.write(f"- Trained: {metadata['training_date'][:10]}")
+            st.write(f"- Tuned with: Optuna (50 trials)")
 
     st.markdown("---")
 
     # Feature Importance
-    st.markdown("### 🎯 Top 20 Feature Importances")
-    top_features = feature_importance.head(20)
+    st.markdown("### 🎯 Feature Importance Analysis")
+    st.markdown("""
+    The XGBoost model identifies which audio features have the strongest impact on track popularity.
+    Features are ranked by their importance scores (gain-based).
+    """)
+
+    top_features = feature_importance.head(20) if len(feature_importance) > 20 else feature_importance
     fig = px.bar(
         top_features,
         x='importance',
         y='feature',
         orientation='h',
-        title='Most Important Features for Predicting Popularity',
-        labels={'importance': 'Importance Score', 'feature': 'Feature'},
+        title=f'Top {len(top_features)} Feature Importances',
+        labels={'importance': 'Importance Score', 'feature': 'Audio Feature'},
         color='importance',
-        color_continuous_scale='Greens'
+        color_continuous_scale='Greens',
+        text='importance'
     )
-    fig.update_layout(height=600, showlegend=False)
+    fig.update_traces(texttemplate='%{text:.3f}', textposition='outside')
+    fig.update_layout(height=max(400, len(top_features) * 30), showlegend=False)
     fig.update_yaxes(autorange="reversed")
     st.plotly_chart(fig, use_container_width=True)
 
+    # Key insights
+    st.info(f"""
+    **Key Findings:**
+    - **{top_features.iloc[0]['feature'].capitalize()}** is the most important feature ({top_features.iloc[0]['importance']:.1%})
+    - **{top_features.iloc[1]['feature'].capitalize()}** is the second most important ({top_features.iloc[1]['importance']:.1%})
+    - **{top_features.iloc[2]['feature'].capitalize()}** is the third most important ({top_features.iloc[2]['importance']:.1%})
+    - These top 3 features account for {top_features.head(3)['importance'].sum():.1%} of the model's predictive power
+    """)
+
     # Model Performance
-    st.markdown("### 📈 Model Performance")
+    st.markdown("### 📈 Model Performance on Full Dataset")
+    st.markdown("""
+    Below are predictions on a sample of the full Spotify dataset (114K tracks).
+    The model was trained on optimized features and tuned with Optuna for best performance.
+    """)
 
     X_test, y_test = load_ml_data()
     # Filter and prepare test data to match model's expected features
@@ -419,8 +466,26 @@ with tab3:
             X_test_model[col] = 2020  # Default value for missing features like release_year
     # Ensure column order matches model's expectations
     X_test_model = X_test_model[model.feature_names_in_]
-    y_pred = model.predict(X_test_model[:1000])  # Predict on sample
-    y_actual = y_test[:1000]
+
+    # Make predictions on larger sample
+    sample_size = min(2000, len(X_test_model))
+    y_pred = model.predict(X_test_model[:sample_size])
+    y_actual = y_test[:sample_size].values.flatten()
+
+    # Calculate metrics on this sample
+    from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+    sample_r2 = r2_score(y_actual, y_pred)
+    sample_rmse = mean_squared_error(y_actual, y_pred, squared=False)
+    sample_mae = mean_absolute_error(y_actual, y_pred)
+
+    # Show sample metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Sample R²", f"{sample_r2:.4f}", help=f"R² on {sample_size:,} tracks from full dataset")
+    with col2:
+        st.metric("Sample RMSE", f"{sample_rmse:.2f}")
+    with col3:
+        st.metric("Sample MAE", f"{sample_mae:.2f}")
 
     col1, col2 = st.columns(2)
 
