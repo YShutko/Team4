@@ -77,22 +77,31 @@ flagged/
 *.pickle
 !data/README.md
 
-# Model files
-*.joblib
+# Model files (except deployment models)
 *.model
 *.pt
 *.pth
 *.onnx
-*.h5
+# *.joblib files are allowed in outputs/models/ via negation patterns below
 
 # Output directories
 eda_outputs/
-outputs/
 results/
 plots/
 figures/
 data_extracted/
 cleaned_music_data.csv
+
+# outputs/ directory - allow only essential deployment files
+outputs/*
+!outputs/models/
+!outputs/metadata/
+outputs/models/*
+outputs/metadata/*
+!outputs/models/xgb_model_*.joblib
+!outputs/metadata/xgb_metadata_*.json
+!outputs/models/model_metadata.json
+!outputs/models/feature_importance.csv
 
 # Logs
 *.log
