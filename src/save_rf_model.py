@@ -99,10 +99,12 @@ joblib.dump(model, model_path)
 print(f"✓ Model saved: {model_path}")
 
 # Save metadata
+import sklearn
+
 metadata = {
     'timestamp': datetime.now().isoformat(),
     'model_type': 'RandomForestRegressor',
-    'sklearn_version': '1.3.0',
+    'sklearn_version': sklearn.__version__,
     'n_samples': len(df),
     'n_features': len(feature_cols),
     'feature_names': feature_cols,
