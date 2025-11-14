@@ -181,9 +181,47 @@ def load_model():
 
     return model, metadata, feature_importance
 
+@st.cache_resource
+def load_rf_model():
+    """Load the latest trained Random Forest model"""
+    import glob
+
+    # Find the latest RF model file
+    model_files = sorted(glob.glob('outputs/models/rf_model_*.joblib'), reverse=True)
+    if not model_files:
+        return None, {}, None  # No RF model found
+
+    latest_model = model_files[0]
+
+    # Find corresponding metadata file
+    model_basename = Path(latest_model).stem
+    suffix = model_basename.replace('rf_model_', '')
+    metadata_file = f'outputs/metadata/rf_metadata_{suffix}.json'
+
+    # Load model
+    model = joblib.load(latest_model)
+
+    # Load metadata if available
+    metadata = {}
+    if Path(metadata_file).exists():
+        with open(metadata_file, 'r') as f:
+            metadata = json.load(f)
+
+    # Create feature importance from model
+    feature_importance = None
+    if hasattr(model, 'feature_importances_'):
+        feature_names = metadata.get('feature_names', [f'feature_{i}' for i in range(len(model.feature_importances_))])
+        feature_importance = pd.DataFrame({
+            'feature': feature_names,
+            'importance': model.feature_importances_
+        }).sort_values('importance', ascending=False)
+
+    return model, metadata, feature_importance
+
 # Load data
 df = load_data()
 model, metadata, feature_importance = load_model()
+rf_model, rf_metadata, rf_feature_importance = load_rf_model()
 
 # Sidebar
 with st.sidebar:
@@ -220,10 +258,11 @@ with st.sidebar:
 st.markdown('<h1 class="main-header">🎵 Spotify Track Analytics Dashboard</h1>', unsafe_allow_html=True)
 
 # Tabs
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 Data Explorer",
     "📈 Visualizations",
-    "🤖 ML Model",
+    "🤖 XGBoost",
+    "🌲 RForest",
     "🎯 Track Predictor"
 ])
 
@@ -409,10 +448,10 @@ with tab2:
     st.plotly_chart(fig, use_container_width=True)
 
 # ============================================================================
-# TAB 3: ML Model
+# TAB 3: XGBoost Model
 # ============================================================================
 with tab3:
-    st.markdown('<h2 class="sub-header">Machine Learning Model</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="sub-header">XGBoost Model Performance</h2>', unsafe_allow_html=True)
 
     # Model info
     st.markdown("#### 📊 Model Performance Metrics")
@@ -853,9 +892,459 @@ with tab3:
         st.json(metadata)
 
 # ============================================================================
-# TAB 4: Track Predictor (Interactive UX)
+# TAB 4: Random Forest Model
 # ============================================================================
 with tab4:
+    st.markdown('<h2 class="sub-header">Random Forest Model Performance</h2>', unsafe_allow_html=True)
+
+    # Check if RF model is available
+    if rf_model is None:
+        st.warning("⚠️ Random Forest model not found. Please train the model first.")
+        st.info("Run: `python src/save_rf_model.py` to train and save the Random Forest model.")
+    else:
+        # Model info
+        st.markdown("#### 📊 Model Performance Metrics")
+        col1, col2, col3, col4 = st.columns(4)
+
+        # Handle both old and new metadata formats
+        metrics = rf_metadata.get('metrics', rf_metadata.get('performance', {}).get('test', {}))
+
+        with col1:
+            r2_val = metrics.get('test_r2', metrics.get('r2', 0))
+            st.metric("Test R² Score", f"{r2_val:.4f}",
+                      help="Coefficient of determination")
+        with col2:
+            rmse_val = metrics.get('test_rmse', metrics.get('rmse', 0))
+            st.metric("Test RMSE", f"{rmse_val:.2f}",
+                      help="Root Mean Squared Error")
+        with col3:
+            mae_val = metrics.get('test_mae', metrics.get('mae', 0))
+            st.metric("Test MAE", f"{mae_val:.2f}",
+                      help="Mean Absolute Error")
+        with col4:
+            n_features = rf_metadata.get('n_features', len(rf_model.feature_names_in_))
+            st.metric("Features", n_features,
+                      help="Number of audio features used")
+
+        # Training info
+        with st.expander("ℹ️ Model Details"):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**Hyperparameters:**")
+                # Handle both hyperparameters and model_params
+                params = rf_metadata.get('model_params', rf_metadata.get('hyperparameters', {}))
+                if params:
+                    display_params = {
+                        "n_estimators": params.get('n_estimators', 'N/A'),
+                        "max_depth": params.get('max_depth', 'N/A'),
+                        "min_samples_split": params.get('min_samples_split', 'N/A'),
+                        "min_samples_leaf": params.get('min_samples_leaf', 'N/A'),
+                        "max_features": params.get('max_features', 'N/A'),
+                        "bootstrap": params.get('bootstrap', 'N/A')
+                    }
+                    st.json(display_params)
+                else:
+                    st.write("No hyperparameters available")
+            with col2:
+                st.markdown("**Training Info:**")
+                st.write(f"- Model Type: Random Forest Regressor")
+                n_samples = rf_metadata.get('n_samples', 'N/A')
+                st.write(f"- Total Samples: {n_samples:,}" if isinstance(n_samples, int) else f"- Total Samples: {n_samples}")
+                train_shapes = rf_metadata.get('data_shapes', {})
+                if train_shapes:
+                    st.write(f"- Train: {train_shapes.get('train', ['N/A'])[0]:,} samples")
+                    st.write(f"- Test: {train_shapes.get('test', ['N/A'])[0]:,} samples")
+                timestamp = rf_metadata.get('timestamp', rf_metadata.get('training_date', 'N/A'))
+                if timestamp != 'N/A':
+                    st.write(f"- Trained: {timestamp[:10]}")
+
+        st.markdown("---")
+
+        # Feature Importance
+        st.markdown("### 🎯 Feature Importance Analysis")
+        st.markdown("""
+        The Random Forest model identifies which audio features have the strongest impact on track popularity.
+        Features are ranked by their importance scores (gain-based).
+        """)
+
+        top_features = rf_feature_importance.head(20) if len(rf_feature_importance) > 20 else rf_feature_importance
+        fig = px.bar(
+            top_features,
+            x='importance',
+            y='feature',
+            orientation='h',
+            title=f'Top {len(top_features)} Feature Importances',
+            labels={'importance': 'Importance Score', 'feature': 'Audio Feature'},
+            color='importance',
+            color_continuous_scale='Greens',
+            text='importance'
+        )
+        fig.update_traces(texttemplate='%{text:.3f}', textposition='outside')
+        fig.update_layout(height=max(400, len(top_features) * 30), showlegend=False)
+        fig.update_yaxes(autorange="reversed")
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Key insights
+        st.info(f"""
+        **Key Findings:**
+        - **{top_features.iloc[0]['feature'].capitalize()}** is the most important feature ({top_features.iloc[0]['importance']:.1%})
+        - **{top_features.iloc[1]['feature'].capitalize()}** is the second most important ({top_features.iloc[1]['importance']:.1%})
+        - **{top_features.iloc[2]['feature'].capitalize()}** is the third most important ({top_features.iloc[2]['importance']:.1%})
+        - These top 3 features account for {top_features.head(3)['importance'].sum():.1%} of the model's predictive power
+        """)
+
+        st.markdown("---")
+
+        # SHAP Analysis
+        st.markdown("### 🎯 SHAP Feature Impact Analysis")
+        st.markdown("""
+        **SHAP (SHapley Additive exPlanations)** values show how each feature contributes to individual predictions.
+        Unlike traditional feature importance, SHAP values show both *direction* (positive/negative impact) and *magnitude*.
+        """)
+
+        # Cache SHAP computation for performance
+        @st.cache_data
+        def compute_shap_values(_rf_rf_model, X_sample):
+            """Compute SHAP values for a sample of data"""
+            # Use TreeExplainer for Random Forest
+            explainer = shap.TreeExplainer(_model)
+            shap_values = explainer.shap_values(X_sample)
+            return shap_values, explainer.expected_value
+
+        # Load data for SHAP analysis
+        X_shap, y_shap = load_ml_data()
+
+        # Use a smaller sample for SHAP (computational efficiency)
+        shap_sample_size = min(500, len(X_shap))
+        X_shap_sample = X_shap[:shap_sample_size]
+
+        with st.spinner("Computing SHAP values... This may take a moment."):
+            shap_values, base_value = compute_shap_values(rf_rf_model, X_shap_sample)
+
+        # SHAP Summary Plot (Beeswarm)
+        st.markdown("#### Feature Impact Distribution")
+        st.markdown("""
+        This plot shows how each feature affects predictions across the dataset:
+        - **Position (x-axis)**: SHAP value (impact on prediction)
+        - **Color**: Feature value (red = high, blue = low)
+        - **Density**: How often this impact occurs
+        """)
+
+        fig_shap_summary, ax = plt.subplots(figsize=(10, 8))
+        shap.summary_plot(shap_values, X_shap_sample, show=False, plot_type="dot")
+        st.pyplot(fig_shap_summary, use_container_width=True)
+        plt.close()
+
+        st.caption("""
+        **Reading the plot:**
+        - Features at the top have the most impact on predictions
+        - Red dots (high feature values) on the right mean higher predictions
+        - Blue dots (low feature values) on the left mean lower predictions
+        """)
+
+        # SHAP Bar Plot (Mean Absolute Impact)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("#### Average Feature Impact")
+            fig_shap_bar, ax = plt.subplots(figsize=(8, 6))
+            shap.summary_plot(shap_values, X_shap_sample, plot_type="bar", show=False)
+            st.pyplot(fig_shap_bar, use_container_width=True)
+            plt.close()
+
+            st.caption("""
+            **Mean |SHAP value|** - Average magnitude of impact across all predictions.
+            Complements Random Forest's gain-based importance with impact-based importance.
+            """)
+
+        with col2:
+            st.markdown("#### Sample Prediction Explanation")
+
+            # Select a random sample for waterfall plot
+            sample_idx = st.slider("Select track index to explain", 0, shap_sample_size-1, 0)
+
+            # Create waterfall plot
+            fig_waterfall, ax = plt.subplots(figsize=(8, 6))
+            shap.waterfall_plot(
+                shap.Explanation(
+                    values=shap_values[sample_idx],
+                    base_values=base_value,
+                    data=X_shap_sample.iloc[sample_idx],
+                    feature_names=X_shap_sample.columns.tolist()
+                ),
+                show=False
+            )
+            st.pyplot(fig_waterfall, use_container_width=True)
+            plt.close()
+
+            st.caption(f"""
+            **Waterfall for track #{sample_idx}:**
+            - Base value: {base_value:.2f} (average prediction)
+            - Actual prediction: {rf_model.predict(X_shap_sample.iloc[[sample_idx]])[0]:.2f}
+            - Shows how each feature pushes prediction up or down
+            """)
+
+        # SHAP Dependence Plots
+        st.markdown("#### Feature Dependence Analysis")
+        st.markdown("Explore how individual features affect predictions across different values:")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Top feature dependence
+            top_feature = rf_feature_importance.iloc[0]['feature']
+            fig_dep1, ax1 = plt.subplots(figsize=(8, 5))
+            shap.dependence_plot(
+                top_feature,
+                shap_values,
+                X_shap_sample,
+                ax=ax1,
+                show=False
+            )
+            st.pyplot(fig_dep1, use_container_width=True)
+            plt.close()
+
+            st.caption(f"""
+            **{top_feature.capitalize()} dependence:**
+            Shows relationship between {top_feature} values and their impact on predictions.
+            Color represents interaction with most correlated feature.
+            """)
+
+        with col2:
+            # Second feature dependence
+            second_feature = rf_feature_importance.iloc[1]['feature']
+            fig_dep2, ax2 = plt.subplots(figsize=(8, 5))
+            shap.dependence_plot(
+                second_feature,
+                shap_values,
+                X_shap_sample,
+                ax=ax2,
+                show=False
+            )
+            st.pyplot(fig_dep2, use_container_width=True)
+            plt.close()
+
+            st.caption(f"""
+            **{second_feature.capitalize()} dependence:**
+            Shows relationship between {second_feature} values and their impact on predictions.
+            Helps identify non-linear patterns and feature interactions.
+            """)
+
+        st.markdown("---")
+
+        # Model Performance
+        st.markdown("### 📈 Model Performance on Full Dataset")
+        n_samples_display = rf_metadata.get('n_samples', len(df))
+        st.markdown(f"""
+        Below are predictions on a sample of the full Spotify dataset ({n_samples_display:,} cleaned tracks).
+        The model was trained on deduplicated data with optimized hyperparameters from Optuna.
+        """)
+
+        X_test, y_test = load_ml_data()
+
+        # Data is already prepared with correct features from load_ml_data
+        sample_size = min(2000, len(X_test))
+        y_pred = rf_model.predict(X_test[:sample_size])
+        y_actual = y_test[:sample_size]
+        if hasattr(y_actual, 'values'):
+            y_actual = y_actual.values.flatten()
+
+        # Calculate metrics on this sample
+        from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+        sample_r2 = r2_score(y_actual, y_pred)
+        sample_rmse = np.sqrt(mean_squared_error(y_actual, y_pred))
+        sample_mae = mean_absolute_error(y_actual, y_pred)
+
+        # Show sample metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Sample R²", f"{sample_r2:.4f}", help=f"R² on {sample_size:,} tracks from full dataset")
+        with col2:
+            st.metric("Sample RMSE", f"{sample_rmse:.2f}")
+        with col3:
+            st.metric("Sample MAE", f"{sample_mae:.2f}")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Prediction vs Actual
+            fig = px.scatter(
+                x=y_actual,
+                y=y_pred,
+                labels={'x': 'Actual Popularity', 'y': 'Predicted Popularity'},
+                title='Predictions vs Actual Values',
+                opacity=0.5
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=[0, 100],
+                    y=[0, 100],
+                    mode='lines',
+                    name='Perfect Prediction',
+                    line=dict(color='red', dash='dash')
+                )
+            )
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col2:
+            # Residuals histogram
+            residuals = y_actual - y_pred
+            fig = px.histogram(
+                residuals,
+                nbins=50,
+                title='Prediction Errors Distribution',
+                labels={'value': 'Residual (Actual - Predicted)', 'count': 'Frequency'},
+                color_discrete_sequence=['#1DB954']
+            )
+            # Add mean line
+            fig.add_vline(x=residuals.mean(), line_dash="dash", line_color="red",
+                         annotation_text=f"Mean: {residuals.mean():.2f}")
+            fig.update_layout(height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Additional performance visualizations
+        st.markdown("### 🔍 Advanced Model Diagnostics")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Residual plot (residuals vs predicted)
+            fig = px.scatter(
+                x=y_pred,
+                y=residuals,
+                labels={'x': 'Predicted Popularity', 'y': 'Residual (Actual - Predicted)'},
+                title='Residual Plot',
+                opacity=0.5,
+                color_discrete_sequence=['#1DB954']
+            )
+            # Add zero line
+            fig.add_hline(y=0, line_dash="dash", line_color="red",
+                         annotation_text="Zero Error")
+            fig.update_layout(height=400)
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.caption("""
+            **Residual Plot Interpretation:**
+            - Points should scatter randomly around zero line
+            - Patterns indicate model bias or heteroscedasticity
+            - Fan shapes suggest varying error across popularity range
+            """)
+
+        with col2:
+            # Error by popularity ranges
+            popularity_bins = pd.cut(y_actual, bins=[0, 20, 40, 60, 80, 100],
+                                    labels=['Very Low (0-20)', 'Low (20-40)', 'Medium (40-60)',
+                                           'High (60-80)', 'Very High (80-100)'])
+            error_df = pd.DataFrame({
+                'Popularity Range': popularity_bins,
+                'Absolute Error': np.abs(residuals)
+            })
+
+            fig = px.box(
+                error_df,
+                x='Popularity Range',
+                y='Absolute Error',
+                title='Model Error by Popularity Range',
+                labels={'Absolute Error': 'Absolute Error (points)'},
+                color='Popularity Range',
+                color_discrete_sequence=px.colors.sequential.Greens
+            )
+            fig.update_layout(height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+
+            st.caption("""
+            **Error Distribution Analysis:**
+            - Shows where the model performs best/worst
+            - Lower boxes indicate better prediction accuracy
+            - Helps identify if model struggles with specific popularity ranges
+            """)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            # Actual distribution
+            fig = px.histogram(
+                y_actual,
+                nbins=30,
+                title='Actual Popularity Distribution',
+                labels={'value': 'Popularity', 'count': 'Frequency'},
+                color_discrete_sequence=['#1DB954']
+            )
+            fig.add_vline(x=y_actual.mean(), line_dash="dash", line_color="red",
+                         annotation_text=f"Mean: {y_actual.mean():.1f}")
+            fig.update_layout(height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+
+        with col2:
+            # Predicted distribution
+            fig = px.histogram(
+                y_pred,
+                nbins=30,
+                title='Predicted Popularity Distribution',
+                labels={'value': 'Popularity', 'count': 'Frequency'},
+                color_discrete_sequence=['#66BB6A']
+            )
+            fig.add_vline(x=y_pred.mean(), line_dash="dash", line_color="red",
+                         annotation_text=f"Mean: {y_pred.mean():.1f}")
+            fig.update_layout(height=400, showlegend=False)
+            st.plotly_chart(fig, use_container_width=True)
+
+        # Model insights
+        st.markdown("### 💡 Model Performance Insights")
+
+        # Calculate additional metrics
+        over_predictions = np.sum(y_pred > y_actual)
+        under_predictions = np.sum(y_pred < y_actual)
+        mae_by_range = error_df.groupby('Popularity Range', observed=True)['Absolute Error'].mean().to_dict()
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Overestimations", f"{over_predictions:,}",
+                     help="Predictions higher than actual popularity")
+        with col2:
+            st.metric("Underestimations", f"{under_predictions:,}",
+                     help="Predictions lower than actual popularity")
+        with col3:
+            accuracy_within_10 = np.sum(np.abs(residuals) <= 10) / len(residuals) * 100
+            st.metric("Within ±10 Points", f"{accuracy_within_10:.1f}%",
+                     help="Percentage of predictions within 10 points of actual")
+
+        # Best/worst performance ranges
+        if mae_by_range:
+            best_range = min(mae_by_range, key=mae_by_range.get)
+            worst_range = max(mae_by_range, key=mae_by_range.get)
+
+            st.success(f"""
+            **Best Performance:** {best_range} popularity range (MAE: {mae_by_range[best_range]:.2f} points)
+            """)
+
+            st.warning(f"""
+            **Needs Improvement:** {worst_range} popularity range (MAE: {mae_by_range[worst_range]:.2f} points)
+            """)
+
+        # Model explanation
+        st.info(f"""
+        **Understanding R² = {sample_r2:.4f}:**
+
+        Audio features alone explain ~{sample_r2*100:.1f}% of popularity variance. The remaining ~{(1-sample_r2)*100:.1f}% comes from:
+        - Artist fame and follower count
+        - Marketing budget and promotion
+        - Playlist placements
+        - Social media trends and virality
+        - Release timing and cultural factors
+
+        **This is expected and aligns with academic research on music popularity prediction.**
+        """)
+
+        # Model metadata
+        with st.expander("📋 View Model Metadata"):
+            st.json(rf_metadata)
+
+    # ============================================================================
+# TAB 5: Track Predictor (Interactive UX)
+# ============================================================================
+with tab5:
     st.markdown('<h2 class="sub-header">🎯 Track Popularity Predictor</h2>', unsafe_allow_html=True)
     st.markdown("""
     **As a music producer**, use this tool to:
