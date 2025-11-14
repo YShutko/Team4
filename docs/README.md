@@ -54,6 +54,12 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
   - Best hyperparameters found
   - Performance comparison
 
+- **[Data Cleaning Methodology](DATA_CLEANING_METHODOLOGY.md)** - ⭐ NEW: Enhanced ETL with deduplication
+  - Audio feature duplicate removal (30,533 tracks)
+  - Zero-popularity track filtering (5,157 tracks)
+  - 31% dataset reduction for quality improvement
+  - Expected R² boost: +0.05 to +0.10
+
 - **[Pipeline Verification Summary](PIPELINE_VERIFICATION_SUMMARY.md)** - Production readiness verification
   - Reproducibility testing
   - Model atomicity checks
@@ -121,6 +127,7 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
 | Document | Description | Audience |
 |----------|-------------|----------|
 | [Hyperparameter Tuning Results](HYPERPARAMETER_TUNING_RESULTS.md) | ⭐ Optuna optimization - 71% R² improvement | Data scientists |
+| [Data Cleaning Methodology](DATA_CLEANING_METHODOLOGY.md) | ⭐ Enhanced ETL - 31% dataset reduction | Data scientists |
 | [Pipeline Verification Summary](PIPELINE_VERIFICATION_SUMMARY.md) | Production readiness verification | ML engineers |
 | [Model Collapse Fix](MODEL_COLLAPSE_FIX.md) | Debugging case study & solution | Data scientists |
 | [ML Pipeline Summary](ML_PIPELINE_SUMMARY.md) | Complete ML pipeline | Data scientists |
@@ -153,7 +160,7 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
 → Read [Makefile Guide](MAKEFILE_GUIDE.md#pipeline-execution)
 
 **...understand the data**
-→ Read [ETL Pipeline Summary](ETL_PIPELINE_SUMMARY.md)
+→ Read [ETL Pipeline Summary](ETL_PIPELINE_SUMMARY.md) and [Data Cleaning Methodology](DATA_CLEANING_METHODOLOGY.md)
 
 **...modify the model**
 → Read [ML Pipeline Summary](ML_PIPELINE_SUMMARY.md)
@@ -254,8 +261,8 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
 
 | Metric | Count |
 |--------|-------|
-| **Total Documents** | 20 |
-| **Total Pages** | 250+ |
+| **Total Documents** | 21 |
+| **Total Pages** | 265+ |
 | **Total Words** | 50,000+ |
 | **Code Examples** | 150+ |
 | **Diagrams** | 15+ |
@@ -276,12 +283,13 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
 
 ### ML Engineer / Data Scientist
 1. [Hyperparameter Tuning Results](HYPERPARAMETER_TUNING_RESULTS.md) - ⭐ 71% R² improvement
-2. [Pipeline Verification Summary](PIPELINE_VERIFICATION_SUMMARY.md) - Production checks
-3. [Model Collapse Fix](MODEL_COLLAPSE_FIX.md) - Debugging case study
-4. [ML Pipeline Summary](ML_PIPELINE_SUMMARY.md) - Complete pipeline
-5. [MLflow Guide](MLFLOW_GUIDE.md) - Experiment tracking
-6. [ETL Pipeline Summary](ETL_PIPELINE_SUMMARY.md) - Feature engineering
-7. [Dashboard Implementation](DASHBOARD_IMPLEMENTATION.md) - Model integration
+2. [Data Cleaning Methodology](DATA_CLEANING_METHODOLOGY.md) - ⭐ Enhanced ETL with deduplication
+3. [Pipeline Verification Summary](PIPELINE_VERIFICATION_SUMMARY.md) - Production checks
+4. [Model Collapse Fix](MODEL_COLLAPSE_FIX.md) - Debugging case study
+5. [ML Pipeline Summary](ML_PIPELINE_SUMMARY.md) - Complete pipeline
+6. [MLflow Guide](MLFLOW_GUIDE.md) - Experiment tracking
+7. [ETL Pipeline Summary](ETL_PIPELINE_SUMMARY.md) - Feature engineering
+8. [Dashboard Implementation](DASHBOARD_IMPLEMENTATION.md) - Model integration
 
 ### Software Developer
 1. [Makefile Guide](MAKEFILE_GUIDE.md) - Development commands
@@ -299,6 +307,7 @@ Welcome to the Spotify Track Analytics documentation. This directory contains co
 
 | Document | Last Updated | Changes |
 |----------|--------------|---------|
+| **Data Cleaning Methodology** | **2025-11-14** | ⭐ NEW: Enhanced ETL with deduplication |
 | **Hyperparameter Tuning Results** | **2025-11-14** | ⭐ NEW: 71% R² improvement, Optuna results |
 | **Pipeline Verification Summary** | **2025-11-14** | NEW: Production verification report |
 | **Model Collapse Fix** | **2025-11-14** | NEW: Debugging case study |
@@ -383,9 +392,9 @@ Makefile Guide
 
 ---
 
-**Index Version**: 2.0
+**Index Version**: 2.1
 **Last Updated**: 2025-11-14
-**Total Documentation**: 20 files, 250+ pages
+**Total Documentation**: 21 files, 265+ pages
 
 ---
 

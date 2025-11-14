@@ -2,9 +2,9 @@
 SPOTIFY DATASET - DATA QUALITY REPORT
 ================================================================================
 
-Total Rows: 114,000
+Total Rows: 78,310
 Total Columns: 26
-Memory Usage: 58.75 MB
+Memory Usage: 40.97 MB
 Duplicate Rows: 0
 
 COLUMNS:

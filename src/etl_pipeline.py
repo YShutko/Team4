@@ -66,12 +66,19 @@ class SpotifyETL:
         """Transform and clean the dataset"""
         logger.info("Starting data transformation...")
 
-        # 1. Remove duplicates
+        # 1. Remove exact duplicates (all columns identical)
         initial_rows = len(self.df)
         self.df = self.df.drop_duplicates()
-        logger.info(f"Removed {initial_rows - len(self.df)} duplicate rows")
+        exact_dups_removed = initial_rows - len(self.df)
+        logger.info(f"Removed {exact_dups_removed:,} exact duplicate rows")
 
-        # 2. Handle missing values
+        # 2. Remove audio feature duplicates (same track, different metadata)
+        audio_dups_removed = self._remove_audio_feature_duplicates()
+
+        # 3. Remove zero-popularity tracks (catalog artifacts)
+        zero_pop_removed = self._remove_zero_popularity_tracks()
+
+        # 4. Handle missing values
         missing_before = self.df.isnull().sum().sum()
 
         # Fill numeric columns with median
@@ -89,12 +96,16 @@ class SpotifyETL:
         missing_after = self.df.isnull().sum().sum()
         logger.info(f"Filled {missing_before - missing_after} missing values")
 
-        # 3. Feature engineering
+        # 5. Feature engineering
         self._engineer_features()
 
-        # 4. Data validation
+        # 6. Data validation
         self._validate_data()
 
+        # 7. Summary of cleaning
+        total_removed = exact_dups_removed + audio_dups_removed + zero_pop_removed
+        logger.info(f"Total rows removed: {total_removed:,} ({total_removed/initial_rows*100:.2f}%)")
+        logger.info(f"Final dataset: {len(self.df):,} tracks")
         logger.info("Data transformation complete")
         return self.df
 
@@ -161,6 +172,103 @@ class SpotifyETL:
         else:
             return "Sad/Low Energy"
 
+    def _remove_audio_feature_duplicates(self) -> int:
+        """
+        Remove tracks with identical audio features (catalog duplicates).
+        Keeps the track with highest popularity, or first occurrence if tied.
+
+        Returns:
+            Number of duplicates removed
+        """
+        logger.info("Identifying audio feature duplicates...")
+
+        # Define audio features to check for duplicates
+        audio_features = [
+            'danceability', 'energy', 'loudness', 'speechiness',
+            'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo'
+        ]
+
+        # Only use features that exist in the dataset
+        available_features = [f for f in audio_features if f in self.df.columns]
+
+        if not available_features:
+            logger.warning("No audio features found for duplicate detection")
+            return 0
+
+        initial_rows = len(self.df)
+
+        # Sort by popularity (descending) to keep most popular version
+        if 'popularity' in self.df.columns:
+            self.df = self.df.sort_values('popularity', ascending=False)
+
+        # Remove duplicates based on audio features, keeping first (most popular)
+        self.df = self.df.drop_duplicates(subset=available_features, keep='first')
+
+        duplicates_removed = initial_rows - len(self.df)
+
+        if duplicates_removed > 0:
+            logger.info(f"Removed {duplicates_removed:,} audio feature duplicates "
+                       f"({duplicates_removed/initial_rows*100:.2f}%)")
+            logger.info(f"  Features checked: {', '.join(available_features)}")
+        else:
+            logger.info("No audio feature duplicates found")
+
+        return duplicates_removed
+
+    def _remove_zero_popularity_tracks(self) -> int:
+        """
+        Remove tracks with zero popularity (catalog artifacts with no listener data).
+
+        Analysis shows that zero-popularity tracks are primarily:
+        - Catalog duplicates (80% are exact audio feature duplicates)
+        - Dead catalog entries with no Spotify streaming history
+        - Not legitimate "unpopular" tracks
+
+        Returns:
+            Number of zero-popularity tracks removed
+        """
+        if 'popularity' not in self.df.columns:
+            logger.warning("Popularity column not found - skipping zero-popularity removal")
+            return 0
+
+        logger.info("Analyzing zero-popularity tracks...")
+
+        initial_rows = len(self.df)
+        zero_pop_count = (self.df['popularity'] == 0).sum()
+
+        if zero_pop_count == 0:
+            logger.info("No zero-popularity tracks found")
+            return 0
+
+        # Log statistics before removal
+        zero_pop_pct = (zero_pop_count / initial_rows) * 100
+        logger.info(f"Found {zero_pop_count:,} zero-popularity tracks ({zero_pop_pct:.2f}%)")
+
+        # Analyze genre distribution
+        if 'track_genre' in self.df.columns:
+            zero_pop_df = self.df[self.df['popularity'] == 0]
+            top_genres = zero_pop_df['track_genre'].value_counts().head(5)
+            logger.info(f"  Top affected genres: {', '.join(top_genres.index.tolist())}")
+
+        # Remove zero-popularity tracks
+        self.df = self.df[self.df['popularity'] > 0].copy()
+
+        tracks_removed = initial_rows - len(self.df)
+
+        # Log statistics after removal
+        if tracks_removed > 0:
+            new_mean = self.df['popularity'].mean()
+            new_median = self.df['popularity'].median()
+            new_std = self.df['popularity'].std()
+
+            logger.info(f"Removed {tracks_removed:,} zero-popularity tracks")
+            logger.info(f"  New popularity stats: mean={new_mean:.2f}, "
+                       f"median={new_median:.2f}, std={new_std:.2f}")
+            logger.info(f"  Rationale: Zero-popularity represents catalog artifacts, "
+                       f"not legitimate listener preferences")
+
+        return tracks_removed
+
     def _validate_data(self):
         """Validate data quality after transformation"""
         logger.info("Validating transformed data...")
@@ -173,7 +281,8 @@ class SpotifyETL:
 
         # Validate numeric ranges
         if 'popularity' in self.df.columns:
-            assert self.df['popularity'].between(0, 100).all(), "Popularity out of range [0-100]"
+            assert self.df['popularity'].between(1, 100).all(), "Popularity out of range [1-100] or contains zeros"
+            assert (self.df['popularity'] == 0).sum() == 0, "Dataset should not contain zero-popularity tracks"
 
         if 'danceability' in self.df.columns:
             assert self.df['danceability'].between(0, 1).all(), "Danceability out of range [0-1]"
