@@ -419,6 +419,7 @@ def create_shap_dependence(feature_name=None):
         feature_name,
         shap_values,
         X_shap_sample,
+        ax=ax,
         show=False
     )
     plt.title(f"SHAP Dependence: {feature_name.capitalize()}", fontsize=12, pad=15)

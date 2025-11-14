@@ -602,11 +602,12 @@ with tab3:
     with col1:
         # Top feature dependence
         top_feature = feature_importance.iloc[0]['feature']
-        fig_dep1, ax = plt.subplots(figsize=(8, 5))
+        fig_dep1, ax1 = plt.subplots(figsize=(8, 5))
         shap.dependence_plot(
             top_feature,
             shap_values,
             X_shap_sample,
+            ax=ax1,
             show=False
         )
         st.pyplot(fig_dep1, use_container_width=True)
@@ -621,11 +622,12 @@ with tab3:
     with col2:
         # Second feature dependence
         second_feature = feature_importance.iloc[1]['feature']
-        fig_dep2, ax = plt.subplots(figsize=(8, 5))
+        fig_dep2, ax2 = plt.subplots(figsize=(8, 5))
         shap.dependence_plot(
             second_feature,
             shap_values,
             X_shap_sample,
+            ax=ax2,
             show=False
         )
         st.pyplot(fig_dep2, use_container_width=True)
